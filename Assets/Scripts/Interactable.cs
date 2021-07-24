@@ -3,24 +3,24 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-[SerializeField]
 public abstract class Interactable : MonoBehaviour
 {
-    public bool isInteractAvailable = true;
+    public bool isInteractEnable { get; set; } = true;
     public abstract void Interact();
 
-    protected void DisableInteract()
+    private void OnTriggerEnter2D(Collider2D collision)
     {
-        isInteractAvailable = false;
+        if (isInteractEnable)
+        {
+            Debug.Log("Press 'E' to interact");
+        }
     }
 
-    protected void EnableInteract()
+    private void OnTriggerExit2D(Collider2D collision)
     {
-        isInteractAvailable = true;
-    }
-
-    public bool InteractAvailable()
-    {
-        return isInteractAvailable;
+        if (isInteractEnable)
+        {
+            Debug.Log("Exit interaction zone");
+        }
     }
 }

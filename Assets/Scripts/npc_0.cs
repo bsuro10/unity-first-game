@@ -4,10 +4,12 @@ using UnityEngine;
 
 public class npc_0 : Interactable
 {
+    public Dialogue dialogue;
+
     public override void Interact()
     {
-        Debug.Log("Interacting: " + transform.name);
-        DisableInteract();
+        SceneManager.Instance.dialogueManager.StartDialogue(dialogue);
+        GameObject.Find("Portal").GetComponent<BoxCollider2D>().enabled = true;
     }
 
     // Start is called before the first frame update

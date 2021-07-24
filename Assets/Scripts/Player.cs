@@ -9,6 +9,7 @@ public class Player : MonoBehaviour
     private BoxCollider2D boxCollider;
     private Animator animator;
     private bool isPlayerWalking;
+    public bool isInDialogue { get; set; }
 
     void Start()
     {
@@ -21,57 +22,72 @@ public class Player : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.E))
         {
-            CheckInteraction();
+            if (isInDialogue)
+            {
+                SceneManager.Instance.dialogueManager.DisplayNextSentence();
+            }
+            else
+            {
+                CheckInteraction();
+            }
         }
     }
 
     void FixedUpdate()
     {
-        float x = Input.GetAxisRaw("Horizontal");
-        float y = Input.GetAxisRaw("Vertical");
-
-        Vector3 moveDelta = new Vector3(x, y, 0);
-
-        if (moveDelta.x > 0)
-            transform.localScale = new Vector3(1, 1, 1);
-        else if (moveDelta.x < 0)
-            transform.localScale = new Vector3(-1, 1, 1);
-
-        RaycastHit2D hitCollider = Physics2D.BoxCast(transform.position, 
-                                        boxCollider.size, 
-                                        0, 
-                                        new Vector2(moveDelta.x, 0), 
-                                        Mathf.Abs(moveDelta.x * Time.deltaTime), 
-                                        LayerMask.GetMask("Actor", "Blocking"));
-        
-        if(hitCollider.collider == null)
+        if (!isInDialogue)
         {
-            transform.Translate(moveDelta.x * Time.deltaTime, 0, 0);
-            if (!isPlayerWalking)
+            float x = Input.GetAxisRaw("Horizontal");
+            float y = Input.GetAxisRaw("Vertical");
+
+            Vector3 moveDelta = new Vector3(x, y, 0);
+
+            if (moveDelta.x > 0)
+                transform.localScale = new Vector3(1, 1, 1);
+            else if (moveDelta.x < 0)
+                transform.localScale = new Vector3(-1, 1, 1);
+
+            RaycastHit2D hitCollider = Physics2D.BoxCast(transform.position,
+                                            boxCollider.size,
+                                            0,
+                                            new Vector2(moveDelta.x, 0),
+                                            Mathf.Abs(moveDelta.x * Time.deltaTime),
+                                            LayerMask.GetMask("Actor", "Blocking"));
+
+            if (hitCollider.collider == null)
             {
-                isPlayerWalking = true;
-                animator.SetBool("is_walking", true);
+                transform.Translate(moveDelta.x * Time.deltaTime, 0, 0);
+                if (!isPlayerWalking)
+                {
+                    isPlayerWalking = true;
+                    animator.SetBool("is_walking", true);
+                }
+            }
+
+            hitCollider = Physics2D.BoxCast(transform.position,
+                                            boxCollider.size,
+                                            0,
+                                            new Vector2(0, moveDelta.y),
+                                            Mathf.Abs(moveDelta.y * Time.deltaTime),
+                                            LayerMask.GetMask("Actor", "Blocking"));
+
+            if (hitCollider.collider == null)
+            {
+                transform.Translate(0, moveDelta.y * Time.deltaTime, 0);
+                if (!isPlayerWalking)
+                {
+                    isPlayerWalking = true;
+                    animator.SetBool("is_walking", true);
+                }
+            }
+
+            if (isPlayerWalking && moveDelta == Vector3.zero)
+            {
+                isPlayerWalking = false;
+                animator.SetBool("is_walking", false);
             }
         }
-
-        hitCollider = Physics2D.BoxCast(transform.position,
-                                        boxCollider.size,
-                                        0,
-                                        new Vector2(0, moveDelta.y),
-                                        Mathf.Abs(moveDelta.y * Time.deltaTime),
-                                        LayerMask.GetMask("Actor", "Blocking"));
-
-        if (hitCollider.collider == null)
-        {
-            transform.Translate(0, moveDelta.y * Time.deltaTime, 0);
-            if (!isPlayerWalking)
-            {
-                isPlayerWalking = true;
-                animator.SetBool("is_walking", true);
-            }
-        }
-
-        if (isPlayerWalking && moveDelta == Vector3.zero)
+        else
         {
             isPlayerWalking = false;
             animator.SetBool("is_walking", false);
@@ -87,8 +103,8 @@ public class Player : MonoBehaviour
         {
             foreach (Collider2D hit in hits)
             {
-                if ((hit.transform.GetComponent<Interactable>()) && 
-                    (hit.transform.GetComponent<Interactable>().InteractAvailable()))
+                if ((hit.transform.GetComponent<Interactable>()) &&
+                    (hit.transform.GetComponent<Interactable>().isInteractEnable))
                 {
                     hit.transform.GetComponent<Interactable>().Interact();
                     return;
